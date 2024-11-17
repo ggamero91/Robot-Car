@@ -1,2 +1,183 @@
+#include <IRremote.h>
 
+// Pin Definitions for Motor Control
+const int pinA = 5;  // Motor A speed (PWM)
+const int pinB = 6;  // Motor B speed (PWM)
+const int pinC = 7;  // Motor A direction
+const int pinD = 8;  // Motor B direction
+const int pinE = 3;  // Standby pin to stop the whole car
+int carState = 0;  // Start with the car off (motors stopped)
+int carSpeed = 100;  // Initial speed of the car (range: 0 to 255)
 
+const int IR_RECEIVE_PIN = 9;  // IR receiver pin
+
+// Define IR button codes for controlling speed and movement
+const long INCREASE_SPEED = 0xF609FF00;  // Replace with your actual code for increasing speed
+const long DECREASE_SPEED = 0xF807FF00;  // Replace with your actual code for decreasing speed
+const long FORWARD_CODE = 0xB946FF00;   // Replace with your actual IR code for forward
+const long BACKWARD_CODE = 0xEA15FF00;  // Replace with your actual IR code for backward
+const long LEFT_CODE = 0xBB44FF00;      // Replace with your actual IR code for left
+const long RIGHT_CODE = 0xBC43FF00;     // Replace with your actual IR code for right
+const long STOP_CODE = 0xBF40FF00;      // Replace with your actual IR code for stop
+
+void setup() { 
+    // Initialize Serial Communication for Debugging
+    Serial.begin(9600); 
+
+    // Initialize the IR receiver
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); 
+
+    // Motor control pins setup
+    pinMode(pinA, OUTPUT);
+    pinMode(pinB, OUTPUT);
+    pinMode(pinC, OUTPUT);
+    pinMode(pinD, OUTPUT);
+    pinMode(pinE, OUTPUT);
+
+    // Set car state to OFF initially (turn off the motors)
+    digitalWrite(pinE, carState); 
+
+    Serial.println("IR Receiver Initialized. Waiting for input..."); 
+} 
+  
+void loop() { 
+    if (IrReceiver.decode()) { 
+        // Print the received HEX value for debugging
+        Serial.print("Received HEX Value: 0x"); 
+        Serial.println(IrReceiver.decodedIRData.decodedRawData, HEX); 
+
+        // Check for specific IR signals (replace with your actual button codes)
+        long receivedCode = IrReceiver.decodedIRData.decodedRawData;
+        
+        if (receivedCode == FORWARD_CODE) {  // Forward button code
+            forward();  // Move forward
+        } else if (receivedCode == BACKWARD_CODE) {  // Backward button code
+            backward();  // Move backward
+        } else if (receivedCode == LEFT_CODE) {  // Left button code
+            left();  // Move left
+        } else if (receivedCode == RIGHT_CODE) {  // Right button code
+            right();  // Move right
+        } else if (receivedCode == STOP_CODE) {  // Stop button code
+            toggleCarState();  // Toggle car state (on/off)
+        } else if (receivedCode == INCREASE_SPEED) {  // Increase speed button
+            increaseSpeed();  // Increase speed
+        } else if (receivedCode == DECREASE_SPEED) {  // Decrease speed button
+            decreaseSpeed();  // Decrease speed
+        }
+
+        IrReceiver.resume();  // Prepare to receive the next signal
+    }
+}
+
+// Move forward
+void forward() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, HIGH);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, HIGH);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
+// Move backward
+void backward() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, LOW);   // Motor A direction (backward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, LOW);   // Motor B direction (backward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
+// Move left
+void left() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, HIGH);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, HIGH);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed/2); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
+// Move right
+void right() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, HIGH);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed/2); // Motor A speed (set speed)
+    digitalWrite(pinD, HIGH);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
+// Helper function to turn on the car
+void turnOnCar() {
+    if (carState == 0) {  // If the car is off, turn it on
+        carState = 1;  // Set carState to 1 to turn the car on
+        Serial.println("Car ON");
+    }
+    digitalWrite(pinE, carState); // Enable car (turn on motors)
+}
+
+// Toggle the car's state (on or off)
+void toggleCarState() {
+    if (carState == 1) {  // If the car is on, turn it off
+        carState = 0;  // Set carState to 0 to turn the car off
+        Serial.println("Car OFF");
+    } else {  // If the car is off, turn it on
+        carState = 1;  // Set carState to 1 to turn the car on
+        Serial.println("Car ON");
+    }
+
+    // Stop the motors if turning off
+    if (carState == 0) {
+        stopMotors();
+    }
+
+    digitalWrite(pinE, carState);  // Disable car (turn off motors if carState is 0)
+}
+
+// Stop motors when the car is off
+void stopMotors() {
+    digitalWrite(pinC, LOW);   // Motor A direction (stop)
+    analogWrite(pinA, 0);      // Motor A speed (stop)
+    digitalWrite(pinD, LOW);   // Motor B direction (stop)
+    analogWrite(pinB, 0);      // Motor B speed (stop)
+}
+
+// Increase speed by a fixed amount
+void increaseSpeed() {
+    if (carSpeed < 255) {  // Ensure the speed doesn't exceed 255
+        carSpeed += 10;  // Increase speed by 10
+        Serial.print("Speed Increased to: ");
+        Serial.println(carSpeed);
+
+        // Dynamically adjust speed while moving
+        if (carState == 1) {
+            analogWrite(pinA, carSpeed);
+            analogWrite(pinB, carSpeed);
+        }
+    }
+}
+
+// Decrease speed by a fixed amount
+void decreaseSpeed() {
+    if (carSpeed > 10) {  // Ensure the speed doesn't go below 10
+        carSpeed -= 10;  // Decrease speed by 10
+        Serial.print("Speed Decreased to: ");
+        Serial.println(carSpeed);
+
+        // Dynamically adjust speed while moving
+        if (carState == 1) {
+            analogWrite(pinA, carSpeed);
+            analogWrite(pinB, carSpeed);
+        }
+    }
+}
