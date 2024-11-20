@@ -6,7 +6,7 @@ const int pinB = 6;  // Motor B speed (PWM)
 const int pinC = 7;  // Motor A direction
 const int pinD = 8;  // Motor B direction
 const int pinE = 3;  // Standby pin to stop the whole car
-int carState = 0;  // Start with the car off (motors stopped)
+int carState = 1;  // Start with the car off (motors stopped)
 int carSpeed = 50;  // Initial speed of the car (range: 0 to 255)
 
 const int IR_RECEIVE_PIN = 9;  // IR receiver pin
@@ -39,24 +39,22 @@ void loop() {
     forward();
   }
   // If the right sensor is between 500 and 800, move the car right
-  else if (rightSensor > 500 && rightSensor < 800) {
+  else if (rightSensor > 400 && rightSensor < 800) {
     right();
   }
   // If the left sensor is between 500 and 800, move the car left
-  else if (leftSensor > 500 && leftSensor < 800) {
+  else if (leftSensor > 400 && leftSensor < 800) {
     left();
   }
-  // If all sensors are greater than 850, stop the car (on air)
-  else if (middleSensor > 850 && rightSensor > 850 && leftSensor > 850) {
+  // If all sensors are greater than 1000, stop the car (on air)
+  else if (middleSensor > 1000 && rightSensor > 1000 && leftSensor > 1000) {
     stopMotors();
   }
-  // If all sensors are less than 50, the car is on the ground but not on the tape
-  else if (middleSensor < 50 && rightSensor < 50 && leftSensor < 50) {
-    right(); 
-  }
-  // Additional condition for middle, right, and left sensors all below 50
-  else if (middleSensor < 50 && rightSensor < 50 && leftSensor < 50) {
-    left();
+  else if(middleSensor < 200 && middleSensor > 60 && rightSensor < 200 &&rightSensor > 60 && leftSensor < 200 && leftSensor > 60 ){
+    spinLeft();
+    millis(2000);
+    spinRight():
+    millis(4000);
   }
 }
 
@@ -72,11 +70,10 @@ void forward() {
 
 // Function to turn the car to the right
 void right() {
-  digitalWrite(pinC, LOW);   // Motor A direction (backward)
-  analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+  digitalWrite(pinC, HIGH);   // Motor A direction (backward)
+  analogWrite(pinA, carSpeed/2); // Motor A speed (set speed)
   digitalWrite(pinD, HIGH);   // Motor B direction (forward)
   analogWrite(pinB, carSpeed); // Motor B speed (set speed)
-
   digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
 }
 
@@ -84,9 +81,8 @@ void right() {
 void left() {
     digitalWrite(pinC, HIGH);   // Motor A direction (forward)
     analogWrite(pinA, carSpeed); // Motor A speed (set speed)
-    digitalWrite(pinD, LOW);   // Motor B direction (backward)
-    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
-
+    digitalWrite(pinD, HIGH);   // Motor B direction (backward)
+    analogWrite(pinB, carSpeed/2); // Motor B speed (set speed)
     digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
 }
 
@@ -97,3 +93,19 @@ void stopMotors() {
     digitalWrite(pinD, LOW);   // Motor B direction (stop)
     analogWrite(pinB, 0);      // Motor B speed (stop)
 }
+
+// Search for line while spinning on axis
+void spinRight() {
+    digitalWrite(pinC, HIGH);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, LOW);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+
+    // Search for line while spinning on axis
+void spinLeft() {
+    digitalWrite(pinC, LOW);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, HIGH);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
