@@ -117,6 +117,30 @@ void right() {
     digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
 }
 
+// Move backwards and left
+void backLeft() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, LOW);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed); // Motor A speed (set speed)
+    digitalWrite(pinD, LOW);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed/2); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
+/ Move backwards and right
+void backRightleft() {
+    turnOnCar();  // Turn on the car if it's off
+
+    digitalWrite(pinC, LOW);   // Motor A direction (forward)
+    analogWrite(pinA, carSpeed/2); // Motor A speed (set speed)
+    digitalWrite(pinD, LOW);   // Motor B direction (forward)
+    analogWrite(pinB, carSpeed); // Motor B speed (set speed)
+
+    digitalWrite(pinE, carState); // Enable car (turn on motors if carState is 1)
+}
+
 // Helper function to turn on the car
 void turnOnCar() {
     if (carState == 0) {  // If the car is off, turn it on
