@@ -1,0 +1,164 @@
+#include <Servo.h>  // Servo library
+
+Servo myservo;  // Servo motor object
+
+// Pin Definitions
+const int pinA = 5;       // Motor A speed (PWM)
+const int pinB = 6;       // Motor B speed (PWM)
+const int pinC = 7;       // Motor A direction
+const int pinD = 8;       // Motor B direction
+const int pinE = 3;       // Standby pin to stop the whole car
+const int pinServo = 10;  // Servo motor pin
+const int pinEcho = 12;   // Echo pin (Receiver)
+const int pinTrig = 13;   // Trig pin (Transmitter)
+int carState = 1;         // Start with the car on (motors enabled)
+int carSpeed = 50;        // Initial speed of the car (range: 0 to 255)
+
+// Function prototypes
+float getDistance();
+void forward();
+void stopMotors();
+void spinRight();
+void spinLeft();
+void uTurn();
+void moveServo(int angle);
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinTrig, OUTPUT);
+  pinMode(pinEcho, INPUT);  // Echo pin must be an input
+  pinMode(pinA, OUTPUT);
+  pinMode(pinB, OUTPUT);
+  pinMode(pinC, OUTPUT);
+  pinMode(pinD, OUTPUT);
+  pinMode(pinE, OUTPUT);
+  myservo.attach(pinServo);  // Attach servo motor
+  myservo.write(90);         // Set servo to front position
+}
+
+void loop() {
+  float distanceFront, distanceLeft, distanceRight;
+
+  // Measure front distance
+  distanceFront = getDistance();
+  Serial.print("Front Distance: ");
+  Serial.println(distanceFront);
+
+  if (distanceFront > 25) {
+    // If no obstacle is within 25 cm, move forward
+    forward();
+  } else {
+    // Obstacle detected within 25 cm, stop the car
+    stopMotors();
+
+    // Check left
+    moveServo(180);  // Turn servo to the left (180 degrees)
+    delay(300);      // Allow servo to stabilize
+    distanceLeft = getDistance();
+    Serial.print("Left Distance: ");
+    Serial.println(distanceLeft);
+
+    if (distanceLeft > 25) {
+      // If the left is clear, spin left and move forward
+      moveServo(90);  // Reset servo to front position
+      spinLeft();
+      forward();
+      return;  // Exit the loop
+    }
+
+    // Check right
+    moveServo(0);  // Turn servo to the right (0 degrees)
+    delay(300);    // Allow servo to stabilize
+    distanceRight = getDistance();
+    Serial.print("Right Distance: ");
+    Serial.println(distanceRight);
+
+    if (distanceRight > 25) {
+      // If the right is clear, spin right and move forward
+      moveServo(90);  // Reset servo to front position
+      spinRight();
+      forward();
+      return;  // Exit the loop
+    }
+
+    // If both left and right are blocked, perform a U-turn
+    moveServo(90);  // Reset servo to front position
+    uTurn();
+  }
+
+  delay(100);  // Small delay to stabilize sensor readings
+}
+
+// Measure distance using ultrasonic sensor
+float getDistance() {
+  long duration;
+  float distance;
+
+  // Generate a 10-microsecond trigger pulse
+  digitalWrite(pinTrig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pinTrig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrig, LOW);
+
+  // Measure the duration of the pulse on the Echo pin
+  duration = pulseIn(pinEcho, HIGH);
+
+  // Calculate distance in cm (duration * 0.034 / 2)
+  distance = (duration * 0.034) / 2;
+
+  return distance;
+}
+
+// Move forward
+void forward() {
+  digitalWrite(pinC, HIGH);      // Motor A direction (forward)
+  analogWrite(pinA, carSpeed);   // Motor A speed (set speed)
+  digitalWrite(pinD, HIGH);      // Motor B direction (forward)
+  analogWrite(pinB, carSpeed);   // Motor B speed (set speed)
+  digitalWrite(pinE, carState);  // Enable car (turn on motors if carState is 1)
+}
+
+// Stop motors
+void stopMotors() {
+  digitalWrite(pinC, LOW);  // Motor A direction (stop)
+  analogWrite(pinA, 0);     // Motor A speed (stop)
+  digitalWrite(pinD, LOW);  // Motor B direction (stop)
+  analogWrite(pinB, 0);     // Motor B speed (stop)
+}
+
+// Spin the car to the right
+void spinRight() {
+  digitalWrite(pinC, LOW);             // Motor A direction (backward)
+  analogWrite(pinA, carSpeed);         // Motor A speed (set speed)
+  digitalWrite(pinD, HIGH);            // Motor B direction (forward)
+  analogWrite(pinB, carSpeed*1.5);         // Motor B speed (set speed)
+  delay(1000);                         // Adjust delay for turning duration
+  stopMotors();
+}
+
+// Spin the car to the left
+void spinLeft() {
+  digitalWrite(pinC, HIGH);            // Motor A direction (forward)
+  analogWrite(pinA, carSpeed*1.5);         // Motor A speed (set speed)
+  digitalWrite(pinD, LOW);             // Motor B direction (backward)
+  analogWrite(pinB, carSpeed);         // Motor B speed (set speed)
+  delay(1000);                         // Adjust delay for turning duration
+  stopMotors();
+}
+
+// Perform a U-turn
+void uTurn() {
+  digitalWrite(pinC, LOW);             // Motor A direction (backward)
+  analogWrite(pinA, carSpeed);         // Motor A speed (set speed)
+  digitalWrite(pinD, HIGH);            // Motor B direction (forward)
+  analogWrite(pinB, carSpeed*1.5);         // Motor B speed (set speed)
+  delay(2000);                         // Adjust delay for a full U-turn
+  stopMotors();
+}
+
+// Move servo to a specific angle
+void moveServo(int angle) {
+  myservo.write(angle);
+  delay(500);  // Allow servo to reach position
+}
