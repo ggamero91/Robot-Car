@@ -1,5 +1,3 @@
-#include <IRremote.h>
-
 // Pin Definitions for Motor Control
 const int pinA = 5;  // Motor A speed (PWM)
 const int pinB = 6;  // Motor B speed (PWM)
@@ -7,90 +5,73 @@ const int pinC = 7;  // Motor A direction
 const int pinD = 8;  // Motor B direction
 const int pinE = 3;  // Standby pin to stop the whole car
 int carState = 1;    // Start with the car on (motors enabled)
-int carSpeed = 37;   // Initial speed of the car (range: 0 to 255)
+int carSpeed = 75;   // Initial speed of the car (range: 0 to 255)
+unsigned long pTime = 0;
+unsigned long pDetectionTime = 0;
 
 const int IR_RECEIVE_PIN = 9;  // IR receiver pin
 
 // Global sensor variables
-int rightSensor;
-int middleSensor;
-int leftSensor;
+int right = A0;
+int middle = A1;
+int left = A2;
 
 void setup() {
   Serial.begin(9600);
 }
 
 void loop() {
-  // Read sensor values
-  rightSensor = analogRead(A0);
-  middleSensor = analogRead(A1);
-  leftSensor = analogRead(A2);
 
   // Output sensor readings to serial monitor for debugging
   Serial.print("Right Sensor = ");
-  Serial.println(rightSensor);
+  Serial.println(analogRead(right));
   Serial.print("Middle Sensor = ");
-  Serial.println(middleSensor);
+  Serial.println(analogRead(middle));
   Serial.print("Left Sensor = ");
-  Serial.println(leftSensor);
+  Serial.println(analogRead(left));
 
 
   // If middle sensor detects the line, move forward
-  if (middleSensor > 700 && middleSensor < 900) {
+  if (analogRead(middle) > 600 && analogRead(middle) < 1000) {
+    forward();
+  } else if (analogRead(right) > 650 && analogRead(right) < 1000 && analogRead(middle) > 600 && analogRead(middle) < 1000) {
+    forward();
+  } else if (analogRead(left) > 650 && analogRead(left) < 1000 && analogRead(middle) > 600 && analogRead(middle) < 1000) {
     forward();
   }
   // If the right sensor detects the line, move right
-  else if (rightSensor > 600 && rightSensor < 900) {
+  else if (analogRead(right) > 650 && analogRead(right) < 1000 && analogRead(middle) < 600) {
     rightTurn();
   }
   // If the left sensor detects the line, move left
-  else if (leftSensor > 600 && leftSensor < 900) {
+  else if (analogRead(left) > 650 && analogRead(left) < 1000 && analogRead(middle) < 600) {
     leftTurn();
   }
   // Car is in the air (no line detected on all sensors)
-  else if (middleSensor > 1000 && leftSensor > 1000 && rightSensor > 1000) {
+  else if (analogRead(middle) > 1000 && analogRead(left) > 1000 && analogRead(right) > 1000) {
     stopMotors();
     //car searches for tracking line
-  } else if (leftSensor < 200 && rightSensor < 200) {
-    static unsigned long turnStartTime = 0;  // Variable to track the start of the turn
-    static int turnState = 0;                // 0 = left turn, 1 = right turn, 2 = second left turn
 
-    if (turnStartTime == 0) {
-      turnStartTime = millis();  // Record the current time for the turn
-      if (turnState == 0) {
-        spinLeft();  // Start turning left
-      } else if (turnState == 1) {
-        spinRight();  // Start turning right
-      } else if (turnState == 2) {
-        spinLeft();  // Start turning left again
-      }
+  } else if (analogRead(left) < 600 && analogRead(right) < 600 && analogRead(middle) < 600) {
+
+
+    unsigned long DetectionTime = millis();
+
+    Serial.println(DetectionTime);
+
+    if (DetectionTime - pDetectionTime <= 600) {
+      rightTurn();
     }
-
-    // Check if 300ms have passed during the first left turn
-    if (turnState == 0 && millis() - turnStartTime >= 500) {
-      turnState = 1;             // Switch to right turn
-      turnStartTime = millis();  // Reset the timer for the right turn
-      spinLeft();               // Start turning right
+    else if (DetectionTime - pDetectionTime >= 600 && DetectionTime - pDetectionTime <= 3600) {
+      leftTurn();
     }
-
-    // Check if 900ms have passed during the right turn
-    else if (turnState == 1 && millis() - turnStartTime >= 700) {
-      turnState = 2;             // Switch to second left turn
-      turnStartTime = millis();  // Reset the timer for the second left turn
-      spinRight();                // Start turning left
+    else if (DetectionTime - pDetectionTime >= 3600 && DetectionTime - pDetectionTime <= 6600) {
+      rightTurn();
     }
-
-    // Check if 1000ms have passed during the second left turn
-    else if (turnState == 2 && millis() - turnStartTime >= 1600) {
-      turnState = 0;      // Reset to start with the first left turn next time
-      turnStartTime = 0;  // Reset the timer for the next cycle
-    }
-
-    // If the middle sensor detects the line during any turn
-    if (middleSensor > 400 && middleSensor < 1000) {
-      forward();          // Move forward when the line is detected
-      turnStartTime = 0;  // Reset the timer for the next cycle
-      turnState = 0;      // Reset to start with a left turn next time
+    else if (DetectionTime - pDetectionTime >= 6600 && DetectionTime - pDetectionTime <= 7000) {
+      stopMotors();
+    } else if (DetectionTime - pDetectionTime >= 7000) {
+      pDetectionTime = DetectionTime;
     }
   }
 }
@@ -106,39 +87,22 @@ void forward() {
   digitalWrite(pinE, carState);  // Enable car (turn on motors if carState is 1)
 }
 
-// Function to spin the car to the right
-void spinRight() {
-  digitalWrite(pinC, LOW);             // Motor A direction (backward)
-  analogWrite(pinA, carSpeed * 1.70);  // Motor A speed (set speed)
-  digitalWrite(pinD, HIGH);            // Motor B direction (forward)
-  analogWrite(pinB, carSpeed * 1.70);  // Motor B speed (set speed)
-  digitalWrite(pinE, carState);        // Enable car (turn on motors if carState is 1)
-}
-
-// Function to spin the car to the left
-void spinLeft() {
-  digitalWrite(pinC, HIGH);            // Motor A direction (forward)
-  analogWrite(pinA, carSpeed * 1.70);  // Motor A speed (set speed)
-  digitalWrite(pinD, LOW);             // Motor B direction (backward)
-  analogWrite(pinB, carSpeed * 1.70);  // Motor B speed (set speed)
-  digitalWrite(pinE, carState);        // Enable car (turn on motors if carState is 1)
-}
 // Function to turn the car to the right
 void rightTurn() {
   digitalWrite(pinC, LOW);            // Motor A direction (backward)
   analogWrite(pinA, carSpeed);  // Motor A speed (set speed)
-  digitalWrite(pinD, HIGH);            // Motor B direction (forward)
-  analogWrite(pinB, carSpeed * 1.80);  // Motor B speed (set speed)
-  digitalWrite(pinE, carState);        // Enable car (turn on motors if carState is 1)
+  digitalWrite(pinD, HIGH);           // Motor B direction (forward)
+  analogWrite(pinB, carSpeed);  // Motor B speed (set speed)
+  digitalWrite(pinE, carState);       // Enable car (turn on motors if carState is 1)
 }
 
 // Move left
 void leftTurn() {
-  digitalWrite(pinC, HIGH);            // Motor A direction (forward)
-  analogWrite(pinA, carSpeed * 1.80);  // Motor A speed (set speed)
+  digitalWrite(pinC, HIGH);           // Motor A direction (forward)
+  analogWrite(pinA, carSpeed);  // Motor A speed (set speed)
   digitalWrite(pinD, LOW);            // Motor B direction (backward)
   analogWrite(pinB, carSpeed);  // Motor B speed (set speed)
-  digitalWrite(pinE, carState);        // Enable car (turn on motors if carState is 1)
+  digitalWrite(pinE, carState);       // Enable car (turn on motors if carState is 1)
 }
 
 // Stop motors when the car is off
