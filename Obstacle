@@ -133,7 +133,7 @@ void spinRight() {
   analogWrite(pinA, carSpeed);         // Motor A speed (set speed)
   digitalWrite(pinD, HIGH);            // Motor B direction (forward)
   analogWrite(pinB, carSpeed*1.5);         // Motor B speed (set speed)
-  delay(1000);                         // Adjust delay for turning duration
+  delay(950);                         // Adjust delay for turning duration
   stopMotors();
 }
 
@@ -143,7 +143,7 @@ void spinLeft() {
   analogWrite(pinA, carSpeed*1.5);         // Motor A speed (set speed)
   digitalWrite(pinD, LOW);             // Motor B direction (backward)
   analogWrite(pinB, carSpeed);         // Motor B speed (set speed)
-  delay(1000);                         // Adjust delay for turning duration
+  delay(950);                         // Adjust delay for turning duration
   stopMotors();
 }
 
@@ -153,7 +153,7 @@ void uTurn() {
   analogWrite(pinA, carSpeed);         // Motor A speed (set speed)
   digitalWrite(pinD, HIGH);            // Motor B direction (forward)
   analogWrite(pinB, carSpeed*1.5);         // Motor B speed (set speed)
-  delay(2000);                         // Adjust delay for a full U-turn
+  delay(1500);                         // Adjust delay for a full U-turn
   stopMotors();
 }
 
