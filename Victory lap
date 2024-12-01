@@ -1,0 +1,76 @@
+
+
+// Pin Definitions
+const int pinA = 5;  // Motor A speed (PWM)
+const int pinB = 6;  // Motor B speed (PWM)
+const int pinC = 7;  // Motor A direction
+const int pinD = 8;  // Motor B direction
+const int pinE = 3;  // Standby pin to stop the whole car
+
+int carState = 1;   // Start with the car on (motors enabled)
+int carSpeed = 50;  // Initial speed of the car (range: 0 to 255)
+
+// Function prototypes
+void forward();
+void stopMotors();
+void spinRight();
+void spinLeft();
+
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(pinA, OUTPUT);
+  pinMode(pinB, OUTPUT);
+  pinMode(pinC, OUTPUT);
+  pinMode(pinD, OUTPUT);
+  pinMode(pinE, OUTPUT);
+}
+
+void loop() {
+  forward();
+  delay(3000);
+  spinLeft();
+  delay(350);
+  forward();
+  delay(3000);
+  spinLeft();
+  delay(350);
+}
+
+// Move forward
+void forward() {
+  digitalWrite(pinC, HIGH);      // Motor A direction (forward)
+  analogWrite(pinA, carSpeed);   // Motor A speed (set speed)
+  digitalWrite(pinD, HIGH);      // Motor B direction (forward)
+  analogWrite(pinB, carSpeed);   // Motor B speed (set speed)
+  digitalWrite(pinE, carState);  // Enable car (turn on motors if carState is 1)
+}
+
+// Stop motors
+void stopMotors() {
+  digitalWrite(pinC, LOW);  // Motor A direction (stop)
+  analogWrite(pinA, 0);     // Motor A speed (stop)
+  digitalWrite(pinD, LOW);  // Motor B direction (stop)
+  analogWrite(pinB, 0);     // Motor B speed (stop)
+}
+
+// Spin the car to the right
+void spinRight() {
+  digitalWrite(pinC, LOW);            // Motor A direction (backward)
+  analogWrite(pinA, carSpeed);        // Motor A speed (set speed)
+  digitalWrite(pinD, HIGH);           // Motor B direction (forward)
+  analogWrite(pinB, carSpeed);  // Motor B speed (set speed)
+  delay(1000);                         // Adjust delay for turning duration
+ 
+}
+
+// Spin the car to the left
+void spinLeft() {
+  digitalWrite(pinC, HIGH);           // Motor A direction (forward)
+  analogWrite(pinA, carSpeed);  // Motor A speed (set speed)
+  digitalWrite(pinD, LOW);            // Motor B direction (backward)
+  analogWrite(pinB, carSpeed);        // Motor B speed (set speed)
+  delay(1000);                         // Adjust delay for turning duration
+
+}
