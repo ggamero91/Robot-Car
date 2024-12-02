@@ -8,7 +8,7 @@ const int pinD = 8;  // Motor B direction
 const int pinE = 3;  // Standby pin to stop the whole car
 
 int carState = 1;   // Start with the car on (motors enabled)
-int carSpeed = 50;  // Initial speed of the car (range: 0 to 255)
+int carSpeed = 100;  // Initial speed of the car (range: 0 to 255)
 
 // Function prototypes
 void forward();
@@ -29,13 +29,24 @@ void setup() {
 
 void loop() {
   forward();
-  delay(3000);
+  delay(7000);
   spinLeft();
-  delay(350);
+
   forward();
   delay(3000);
   spinLeft();
-  delay(350);
+
+  forward();
+  delay(6000);
+  spinLeft();
+
+  forward();
+  delay(3000);
+  spinLeft();
+  forward();
+  delay(2000);
+  stopMotors();
+  delay(10000);
 }
 
 // Move forward
@@ -57,11 +68,11 @@ void stopMotors() {
 
 // Spin the car to the right
 void spinRight() {
-  digitalWrite(pinC, LOW);            // Motor A direction (backward)
-  analogWrite(pinA, carSpeed);        // Motor A speed (set speed)
+  digitalWrite(pinC, HIGH);            // Motor A direction (backward)
+  analogWrite(pinA, carSpeed/2);        // Motor A speed (set speed)
   digitalWrite(pinD, HIGH);           // Motor B direction (forward)
   analogWrite(pinB, carSpeed);  // Motor B speed (set speed)
-  delay(1000);                         // Adjust delay for turning duration
+  delay(2000);                         // Adjust delay for turning duration
  
 }
 
@@ -69,8 +80,8 @@ void spinRight() {
 void spinLeft() {
   digitalWrite(pinC, HIGH);           // Motor A direction (forward)
   analogWrite(pinA, carSpeed);  // Motor A speed (set speed)
-  digitalWrite(pinD, LOW);            // Motor B direction (backward)
-  analogWrite(pinB, carSpeed);        // Motor B speed (set speed)
-  delay(1000);                         // Adjust delay for turning duration
+  digitalWrite(pinD, HIGH);            // Motor B direction (backward)
+  analogWrite(pinB, carSpeed/2);        // Motor B speed (set speed)
+  delay(2200);                         // Adjust delay for turning duration
 
 }
