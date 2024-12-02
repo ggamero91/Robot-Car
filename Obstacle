@@ -12,7 +12,7 @@ const int pinServo = 10;  // Servo motor pin
 const int pinEcho = 12;   // Echo pin (Receiver)
 const int pinTrig = 13;   // Trig pin (Transmitter)
 int carState = 1;         // Start with the car on (motors enabled)
-int carSpeed = 50;        // Initial speed of the car (range: 0 to 255)
+int carSpeed = 80;        // Initial speed of the car (range: 0 to 255)
 
 // Function prototypes
 float getDistance();
@@ -133,7 +133,7 @@ void spinRight() {
   analogWrite(pinA, carSpeed);         // Motor A speed (set speed)
   digitalWrite(pinD, HIGH);            // Motor B direction (forward)
   analogWrite(pinB, carSpeed*1.5);         // Motor B speed (set speed)
-  delay(950);                         // Adjust delay for turning duration
+  delay(500);                         // Adjust delay for turning duration
   stopMotors();
 }
 
@@ -143,7 +143,7 @@ void spinLeft() {
   analogWrite(pinA, carSpeed*1.5);         // Motor A speed (set speed)
   digitalWrite(pinD, LOW);             // Motor B direction (backward)
   analogWrite(pinB, carSpeed);         // Motor B speed (set speed)
-  delay(950);                         // Adjust delay for turning duration
+  delay(500);                         // Adjust delay for turning duration
   stopMotors();
 }
 
