@@ -28,24 +28,24 @@ void setup() {
 }
 
 void loop() {
-  forward();
-  delay(7000);
+  forward(); 
+  delay(7000); // move the car forward for 7 seconds up to first turn
   spinLeft();
 
   forward();
-  delay(3000);
+  delay(3000); // car turns for 3 seconds, related to car speed.
   spinLeft();
 
   forward();
-  delay(6000);
+  delay(6000);// move the car forward for 6 seconds up to first turn
   spinLeft();
 
   forward();
-  delay(3000);
+  delay(3000);// move the car forward for 3 seconds up to first turn
   spinLeft();
   forward();
-  delay(2000);
-  stopMotors();
+  delay(2000);// move the car forward for 2 seconds up to first turn
+  stopMotors(); 
   delay(10000);
 }
 
