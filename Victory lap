@@ -1,4 +1,4 @@
-
+// this code makes the car move forward and turn at specific intervals in order to complete a victory lap
 
 // Pin Definitions
 const int pinA = 5;  // Motor A speed (PWM)
