@@ -1,3 +1,5 @@
+// This code is an obstacle avoidance program that works with an utrasonic sensor.
+
 #include <Servo.h>  // Servo library
 
 Servo myservo;  // Servo motor object
