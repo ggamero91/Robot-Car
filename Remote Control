@@ -1,3 +1,5 @@
+// This code uses a remote control to move the car in any desired direction
+
 #include <IRremote.h>
 
 const int IR_RECEIVE_PIN = 9;  // Define the pin connected to the IR receiver
