@@ -1,3 +1,5 @@
+// This code programs the robot car to follow a black tracking line.
+
 // Pin Definitions for Motor Control
 const int pinA = 5;  // Motor A speed (PWM)
 const int pinB = 6;  // Motor B speed (PWM)
